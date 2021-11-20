@@ -18,8 +18,8 @@ style.type = "text/css";
 style.innerHTML = `
 
   .qref {
-    background: #FFFF99;
-    color: #000000;
+    background: #FF9;
+    color: #000;
   }
 
   .qref_popup {
@@ -27,20 +27,15 @@ style.innerHTML = `
   }
 
   .qref_popup > a {
-    background: #FFFF99;
-    border-color: #777777;
-    border-style: dotted;
-    border-width: 1px;
-    color: #777777;
+    background: #FF9;
+    border: 1px dotted #777;
+    color: #777;
     display: inline-block;
     font-family: sans-serif;
     font-size: 12px;
     height: 20px;
     line-height: 20px;
-    padding-bottom: 0px;
-    padding-left: 1px;
-    padding-right: 3px;
-    padding-top: 0px;
+    padding: 0 3px 0 1px;
     text-decoration: none;
     user-select: none;
     vertical-align: middle;
@@ -49,9 +44,9 @@ style.innerHTML = `
   }
 
   .qref_popup > a:hover {
-    background: #FFFF00;
-    border-color: #000000;
-    color: #000000;
+    background: #FF0;
+    border-color: #000;
+    color: #000;
   }
 
   .qref_popup > a > svg {
