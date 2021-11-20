@@ -1,11 +1,14 @@
 {
   "author": "Quinn Grier",
+  "browser": "qref.js",
   "description": "Add selection permalinking to an HTML page",
+  "keywords": [
+    "html",
+    "permalink",
+    "selection"
+  ],
   "license": "CC0-1.0",
-  "main": "qref.js",
   "name": "qref",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "repository": "https://github.com/quinngrier/qref.git",
   "version": "0.0.1"
 }
