@@ -65,11 +65,15 @@ function is_char(node) {
 }
 
 function is_text(node) {
-  return node instanceof Text;
+  return node.nodeType === Node.TEXT_NODE;
+}
+
+function is_element(node) {
+  return node.nodeType === Node.ELEMENT_NODE;
 }
 
 function is_qref(node) {
-  return node instanceof HTMLElement && node.className == "qref";
+  return is_element(node) && node.className === "qref";
 }
 
 function is_squishy(node) {
@@ -102,37 +106,19 @@ function squish_left(node) {
   let length = 0;
   while (true) {
     const prev = node.previousSibling;
-    if (is_text(prev)) {
+    if (prev === null) {
+      break;
+    } else if (is_text(prev)) {
       length += prev.nodeValue.length;
     } else if (is_qref(prev)) {
       squished = true;
       length += prev.childNodes[0].nodeValue.length;
     } else {
-      return {squished: squished, length: length, node: node};
+      break;
     }
     node = prev;
   }
-}
-
-function get_addr_2(node, offset) {
-  if (node === document.body) {
-    return [offset];
-  }
-  const parent = node.parentNode;
-  if (is_text(node)) {
-    if (is_qref(parent)) {
-      const s = squish_left(parent);
-      const addr = get_addr_2(parent.parentNode, get_offset(s.node));
-      return addr.concat(s.length + offset);
-    }
-    const s = squish_left(node);
-    if (s.squished) {
-      const addr = get_addr_2(parent, get_offset(s.node));
-      return addr.concat(s.length + offset);
-    }
-  }
-  const addr = get_addr_2(parent, get_offset(node));
-  return addr.concat([offset]);
+  return {squished, length, node};
 }
 
 function get_addr(node, offset) {
@@ -143,7 +129,27 @@ function get_addr(node, offset) {
       offset = get_offset(node.childNodes[offset - 1]) + 1;
     }
   }
-  return get_addr_2(node, offset);
+  function f(node, offset) {
+    if (node === document.body) {
+      return [offset];
+    }
+    const parent = node.parentNode;
+    if (is_text(node)) {
+      if (is_qref(parent)) {
+        const s = squish_left(parent);
+        const addr = f(parent.parentNode, get_offset(s.node));
+        return addr.concat(s.length + offset);
+      }
+      const s = squish_left(node);
+      if (s.squished) {
+        const addr = f(parent, get_offset(s.node));
+        return addr.concat(s.length + offset);
+      }
+    }
+    const addr = f(parent, get_offset(node));
+    return addr.concat([offset]);
+  }
+  return f(node, offset);
 }
 
 function cmp_addr(addr1, addr2) {
@@ -154,12 +160,6 @@ function cmp_addr(addr1, addr2) {
     }
   }
   return addr1.length - addr2.length;
-}
-
-function comes_before(node1, node2) {
-  const addr1 = get_addr_2(node1.parentNode, get_offset(node1));
-  const addr2 = get_addr_2(node2.parentNode, get_offset(node2));
-  return cmp_addr(addr1, addr2) < 0;
 }
 
 let popup_count = 0;
@@ -259,24 +259,58 @@ function get_range_position(addr, node) {
 }
 
 function add_highlight(highlights, node, y) {
-  const xs = highlights.get(node);
-  if (xs === undefined) {
-    highlights.set(node, [y]);
-  } else {
-    absorb: while (true) {
-      for (let i = 0; i < xs.length; ++i) {
-        const x = xs[i];
-        if (x[0] <= y[1] && y[0] <= x[1]) {
-          y[0] = Math.min(y[0], x[0]);
-          y[1] = Math.max(y[1], x[1]);
-          xs.splice(i, 1);
-          continue absorb;
-        }
-      }
-      break;
-    }
-    xs.push(y);
+  if (!is_text(node) || y[0] === y[1]) {
+    return;
   }
+  {
+    const xs = highlights.get(node);
+    if (xs !== undefined) {
+      absorb: while (true) {
+        for (let i = 0; i < xs.length; ++i) {
+          const x = xs[i];
+          if (x[0] <= y[1] && y[0] <= x[1]) {
+            y[0] = Math.min(y[0], x[0]);
+            y[1] = Math.max(y[1], x[1]);
+            xs.splice(i, 1);
+            continue absorb;
+          }
+        }
+        xs.push(y);
+        return;
+      }
+    }
+  }
+  {
+    function f1(x) {
+      return [
+        "break-spaces",
+        "pre",
+        "pre-line",
+        "pre-wrap",
+      ].includes(x);
+    }
+    function f2(x) {
+      return [
+        "block",
+        "table-cell",
+        "table-column",
+        "table-column-group",
+        "table-footer-group",
+        "table-header-group",
+        "table-row",
+        "table-row-group",
+      ].includes(x);
+    }
+    function f3(x) {
+      return x !== null && f2(window.getComputedStyle(x).display);
+    }
+    if (/^\s*$/.test(node.nodeValue)
+        && !f1(window.getComputedStyle(node.parentNode).whiteSpace)
+        && (f3(node.previousSibling) || f3(node.nextSibling))) {
+      return;
+    }
+  }
+  highlights.set(node, [y]);
 }
 
 function get_highlights(highlights, range) {
@@ -289,32 +323,27 @@ function get_highlights(highlights, range) {
     if (is_char(node)) {
       const n = node.nodeValue.length;
       if (is_start && is_end) {
-        if (is_text(node)) {
-          add_highlight(highlights, node, [i, j]);
-        }
+        add_highlight(highlights, node, [i, j]);
       } else if (is_start) {
-        if (is_text(node)) {
-          add_highlight(highlights, node, [i, n]);
-        }
+        add_highlight(highlights, node, [i, n]);
         highlight = true;
       } else if (is_end) {
-        if (is_text(node)) {
-          add_highlight(highlights, node, [0, j]);
-        }
+        add_highlight(highlights, node, [0, j]);
         highlight = false;
-      } else if (is_text(node) && highlight) {
+      } else if (highlight) {
         add_highlight(highlights, node, [0, n]);
       }
-    }
-    for (let k = 0; k <= node.childNodes.length; ++k) {
-      if (is_start && k == i) {
-        highlight = true;
-      }
-      if (is_end && k == j) {
-        highlight = false;
-      }
-      if (k < node.childNodes.length) {
-        walk(node.childNodes[k]);
+    } else {
+      for (let k = 0; k <= node.childNodes.length; ++k) {
+        if (is_start && k == i) {
+          highlight = true;
+        }
+        if (is_end && k == j) {
+          highlight = false;
+        }
+        if (k < node.childNodes.length) {
+          walk(node.childNodes[k]);
+        }
       }
     }
   }
@@ -323,7 +352,7 @@ function get_highlights(highlights, range) {
 }
 
 const query = document.URL.replace(/^[^?]*\??/, "");
-const highlights = new Map();
+const ranges = [];
 for (const param of query.split("&").map(x => x.split("=", 2))) {
   if (param.length == 2 && decodeURIComponent(param[0]) == "qref") {
     const list = decodeURIComponent(param[1]).split("+");
@@ -332,17 +361,22 @@ for (const param of query.split("&").map(x => x.split("=", 2))) {
         const addr1 = parse_addr(item[0]);
         const addr2 = parse_addr(item[1]);
         if (addr1.length > 0 && addr2.length > 0) {
-          const start = get_range_position(addr1);
-          const end = get_range_position(addr2);
-          if (start !== null && end !== null) {
-            const range = document.createRange();
-            range.setStart(start.node, start.offset);
-            range.setEnd(end.node, end.offset);
-            get_highlights(highlights, range);
-          }
+          ranges.push([addr1, addr2]);
         }
       }
     }
+  }
+}
+ranges.sort((x, y) => x[0] - y[0]);
+const highlights = new Map();
+for (const [addr1, addr2] of ranges) {
+  const start = get_range_position(addr1);
+  const end = get_range_position(addr2);
+  if (start !== null && end !== null) {
+    const range = document.createRange();
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
+    get_highlights(highlights, range);
   }
 }
 
@@ -372,7 +406,7 @@ for (const [node, pairs] of highlights) {
   while (i-- > 0) {
     parent.insertBefore(new_nodes[i], new_nodes[i + 1]);
   }
-  if (first_node === null || comes_before(new_nodes[0], first_node)) {
+  if (first_node === null) {
     first_node = new_nodes[0];
   }
 }
