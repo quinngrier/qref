@@ -10,6 +10,8 @@
 
 {
 
+const root = document.body;
+
 const style = document.createElement("style");
 style.type = "text/css";
 
@@ -80,10 +82,6 @@ function is_squishy(node) {
   return is_text(node) || is_qref(node);
 }
 
-function in_body(node) {
-  return document.body.contains(node);
-}
-
 function get_offset(node) {
   let i = 0;
   let node_is_squishy = is_squishy(node);
@@ -130,7 +128,7 @@ function get_addr(node, offset) {
     }
   }
   function f(node, offset) {
-    if (node === document.body) {
+    if (node === root) {
       return [offset];
     }
     const parent = node.parentNode;
@@ -167,7 +165,7 @@ function get_popup(j) {
   const id = "qref_" + j;
   var popup = document.getElementById(id);
   if (popup === null) {
-    popup = document.body.appendChild(document.createElement("div"));
+    popup = root.appendChild(document.createElement("div"));
     popup.id = id;
     popup.className = "qref_popup";
     popup.innerHTML = `
@@ -190,10 +188,10 @@ document.addEventListener("selectionchange", function(event) {
   let j = 0;
   for (let i = 0; i < selection.rangeCount; ++i) {
     const range = selection.getRangeAt(i);
-    if (!in_body(range.startContainer)) {
+    if (!root.contains(range.startContainer)) {
       continue;
     }
-    if (!in_body(range.endContainer)) {
+    if (!root.contains(range.endContainer)) {
       continue;
     }
     const addr1 = get_addr(range.startContainer, range.startOffset);
@@ -211,10 +209,10 @@ document.addEventListener("selectionchange", function(event) {
     const popup = get_popup(j++);
     popup.style.display = "block";
     const rect = popup.getBoundingClientRect();
-    x = Math.min(x, document.body.scrollWidth - rect.width);
+    x = Math.min(x, root.scrollWidth - rect.width);
     x = Math.max(x, 0);
     y -= rect.height;
-    y = Math.min(y, document.body.scrollHeight - rect.height);
+    y = Math.min(y, root.scrollHeight - rect.height);
     y = Math.max(y, 0);
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
@@ -239,7 +237,7 @@ function parse_addr(text) {
 
 function get_range_position(addr, node) {
   if (node === undefined) {
-    node = document.body;
+    node = root;
   }
   const offset = addr[0];
   if (is_char(node)) {
