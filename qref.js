@@ -431,34 +431,33 @@ function qref(...args) {
   }
 
   //--------------------------------------------------------------------
+  // Parse the query string and do the highlighting
+  //--------------------------------------------------------------------
 
-  const query =
-      document.URL.replace(/^[^?]*\??/, "").replace(/#.*/, "");
-
-  const addr_pairs = [];
-
-  function parse_addr(text) {
+  function parse_address(text) {
     if (!/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/.test(text)) {
       return null;
     }
-    const addr = text.split(".").map(x => parseInt(x));
 
-    // Verify that the address points to a valid location.
-    const valid = (function f(addr, i, node) {
+    const offsets = text.split(".").map(x => parseInt(x));
+    let n = offsets.length;
+
+    // Validate the address.
+    const valid = (function f(offsets, i, node) {
       if (is_char(node)) {
-        return i == addr.length - 1 && addr[i] <= node.nodeValue.length;
+        return i == n - 1 && offsets[i] <= node.nodeValue.length;
       }
-      if (addr[i] > node.childNodes.length) {
+      if (offsets[i] > node.childNodes.length) {
         return false;
       }
-      if (i == addr.length - 1) {
+      if (i == n - 1) {
         return true;
       }
-      if (addr[i] == node.childNodes.length) {
+      if (offsets[i] == node.childNodes.length) {
         return false;
       }
-      return f(addr, i + 1, node.childNodes[addr[i]]);
-    })(addr, 0, root);
+      return f(offsets, i + 1, node.childNodes[offsets[i]]);
+    })(offsets, 0, root);
     if (!valid) {
       return null;
     }
@@ -467,57 +466,45 @@ function qref(...args) {
     // components as possible, moving backwards. For example, if every
     // component of 1.2.3.4 is pointing at its last child except for the
     // last component, which is pointing one-past-the-end, normalization
-    // will produce 1.2.3.4 -> 1.2.4 -> 1.3 -> 2.
-    {
+    // will yield 1.2.3.4 -> 1.2.4 -> 1.3 -> 2.
+    const container = (function() {
       let node = root;
-      let n = addr.length;
       for (let i = 0; i < n - 1; ++i) {
-        node = node.childNodes[addr[i]];
+        node = node.childNodes[offsets[i]];
       }
-      while (n > 1 && addr[n - 1] == node_length(node)) {
+      while (n > 1 && offsets[n - 1] == node_length(node)) {
         node = node.parentNode;
-        ++addr[--n - 1];
+        ++offsets[--n - 1];
       }
-      addr.length = n;
-    }
+      offsets.length = n;
+      return node;
+    })();
 
-    return addr;
+    return {container, offset: offsets[n - 1], offsets};
   }
 
-  function get_range_position(addr, node) {
-    if (node === undefined) {
-      node = root;
-    }
-    const offset = addr[0];
-    if (is_char(node)) {
-      if (offset > node.nodeValue.length) {
-        return null;
-      }
-    } else if (offset > node.childNodes.length) {
-      return null;
-    }
-    if (addr.length == 1) {
-      return {node, offset};
-    }
-    if (is_char(node)) {
-      return null;
-    }
-    return get_range_position(addr.slice(1), node.childNodes[offset]);
+  function address_cmp(a, b) {
+    return cmp_addr(a.offsets, b.offsets);
   }
 
-  for (const param of query.split("&").map(x => x.split("=", 2))) {
+  const address_pairs = [];
+
+  const query_string =
+      document.URL.replace(/^[^?]*\??/, "").replace(/#.*/, "");
+  for (const chunk of query_string.split("&")) {
+    const param = chunk.split("=", 2);
     if (param.length == 2 && decodeURIComponent(param[0]) == "qref") {
-      const list = decodeURIComponent(param[1]).split("+");
-      for (const item of list.map(x => x.split("-", 2))) {
-        if (item.length == 2) {
-          const addr1 = parse_addr(item[0]);
-          const addr2 = parse_addr(item[1]);
-          if (addr1 !== null && addr2 !== null) {
-            const cmp = cmp_addr(addr1, addr2);
+      const pairs = decodeURIComponent(param[1]).split("+");
+      for (const pair of pairs.map(x => x.split("-", 2))) {
+        if (pair.length == 2) {
+          const start = parse_address(pair[0]);
+          const end = parse_address(pair[1]);
+          if (start !== null && end !== null) {
+            const cmp = address_cmp(start, end);
             if (cmp < 0) {
-              addr_pairs.push([addr1, addr2]);
+              address_pairs.push([start, end]);
             } else if (cmp > 0) {
-              addr_pairs.push([addr2, addr1]);
+              address_pairs.push([end, start]);
             }
           }
         }
@@ -525,38 +512,33 @@ function qref(...args) {
     }
   }
 
-  addr_pairs.sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+  address_pairs.sort((x, y) => address_cmp(x[0], y[0])
+                               || address_cmp(x[1], y[1]));
 
-  for (let i = 0; i < addr_pairs.length - 1;) {
-    const x = addr_pairs[i];
-    const y = addr_pairs[i + 1];
-    if (cmp_addr(x[0], y[1]) <= 0 && cmp_addr(y[0], x[1]) <= 0) {
-      if (cmp_addr(y[0], x[0]) < 0) {
+  for (let i = 0; i < address_pairs.length - 1;) {
+    const x = address_pairs[i];
+    const y = address_pairs[i + 1];
+    if (address_cmp(x[0], y[1]) <= 0 && address_cmp(y[0], x[1]) <= 0) {
+      if (address_cmp(y[0], x[0]) < 0) {
         x[0] = y[0];
       }
-      if (cmp_addr(y[1], x[1]) > 0) {
+      if (address_cmp(y[1], x[1]) > 0) {
         x[1] = y[1];
       }
-      addr_pairs.splice(i + 1, 1);
+      address_pairs.splice(i + 1, 1);
     } else {
       ++i;
     }
   }
 
-  //--------------------------------------------------------------------
-
   const ranges = [];
   const highlights = new Map();
-  for (const [addr1, addr2] of addr_pairs) {
-    const start = get_range_position(addr1);
-    const end = get_range_position(addr2);
-    if (start !== null && end !== null) {
-      const range = document.createRange();
-      range.setStart(start.node, start.offset);
-      range.setEnd(end.node, end.offset);
-      ranges.push(range);
-      get_highlights(highlights, range);
-    }
+  for (const [start, end] of address_pairs) {
+    const range = document.createRange();
+    range.setStart(start.container, start.offset);
+    range.setEnd(end.container, end.offset);
+    ranges.push(range);
+    get_highlights(highlights, range);
   }
 
   if (ranges.length > 0) {
@@ -637,6 +619,8 @@ function qref(...args) {
       ranges[i].setEnd(ends[i].container, ends[i].offset);
     }
   }
+
+  //--------------------------------------------------------------------
 
   const more_above = document.createElement("div");
   more_above.className = "qref_more_above";
