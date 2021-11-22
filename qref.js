@@ -100,85 +100,85 @@ function qref(...args) {
 
   style.innerHTML = `
 
-  .qref {
-    background: #FF9;
-    color: #000;
-  }
+    .qref {
+      background: #FF9;
+      color: #000;
+    }
 
-  .qref_popup {
-    position: absolute;
-  }
+    .qref_popup {
+      position: absolute;
+    }
 
-  .qref_permalink_container {
-    position: relative;
-  }
+    .qref_permalink_container {
+      position: relative;
+    }
 
-  .qref_more_above,
-  .qref_more_below {
-    display: none;
-    position: sticky;
-  }
+    .qref_more_above,
+    .qref_more_below {
+      display: none;
+      position: sticky;
+    }
 
-  .qref_popup,
-  .qref_popup *,
-  .qref_more_above,
-  .qref_more_above *,
-  .qref_more_below,
-  .qref_more_below * {
-    user-select: none;
-  }
+    .qref_popup,
+    .qref_popup *,
+    .qref_more_above,
+    .qref_more_above *,
+    .qref_more_below,
+    .qref_more_below * {
+      user-select: none;
+    }
 
-  .qref_popup > a,
-  .qref_more_above > a,
-  .qref_more_below > a {
-    background: #FF9;
-    border: 1px dotted #777;
-    color: #777;
-    display: block;
-    font-family: sans-serif;
-    font-size: 12px;
-    height: 18px;
-    line-height: 18px;
-    text-decoration: none;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
+    .qref_popup > a,
+    .qref_more_above > a,
+    .qref_more_below > a {
+      background: #FF9;
+      border: 1px dotted #777;
+      color: #777;
+      display: block;
+      font-family: sans-serif;
+      font-size: 12px;
+      height: 18px;
+      line-height: 18px;
+      text-decoration: none;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
 
-  .qref_popup > a:hover,
-  .qref_more_above > a:hover,
-  .qref_more_below > a:hover {
-    background: #FF0;
-    border-color: #000;
-    color: #000;
-    cursor: pointer;
-  }
+    .qref_popup > a:hover,
+    .qref_more_above > a:hover,
+    .qref_more_below > a:hover {
+      background: #FF0;
+      border-color: #000;
+      color: #000;
+      cursor: pointer;
+    }
 
-  .qref_popup > a {
-    padding: 0 3px 0 1px;
-  }
+    .qref_popup > a {
+      padding: 0 3px 0 1px;
+    }
 
-  .qref_popup > a > svg {
-    vertical-align: -4px;
-  }
+    .qref_popup > a > svg {
+      vertical-align: -4px;
+    }
 
-  .qref_more_above > a,
-  .qref_more_below > a {
-    padding: 0 3px;
-    position: absolute;
-    right: 0;
-  }
+    .qref_more_above > a,
+    .qref_more_below > a {
+      padding: 0 3px;
+      position: absolute;
+      right: 0;
+    }
 
-  .qref_more_above,
-  .qref_more_above > a {
-    top: 0;
-  }
+    .qref_more_above,
+    .qref_more_above > a {
+      top: 0;
+    }
 
-  .qref_more_below,
-  .qref_more_below > a {
-    bottom: 0;
-  }
+    .qref_more_below,
+    .qref_more_below > a {
+      bottom: 0;
+    }
 
-`;
+  `;
 
   document.head.appendChild(style);
 
