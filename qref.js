@@ -95,92 +95,92 @@ function qref(...args) {
 
   //--------------------------------------------------------------------
 
-  const style = document.createElement("style");
-  style.type = "text/css";
+  {
+    const style = document.createElement("style");
+    style.type = "text/css";
+    style.innerHTML = `
 
-  style.innerHTML = `
+      .qref {
+        background: #FF9;
+        color: #000;
+      }
 
-    .qref {
-      background: #FF9;
-      color: #000;
-    }
+      .qref_link {
+        position: absolute;
+      }
 
-    .qref_link {
-      position: absolute;
-    }
+      .qref_permalink_container {
+        position: relative;
+      }
 
-    .qref_permalink_container {
-      position: relative;
-    }
+      .qref_more_above,
+      .qref_more_below {
+        display: none;
+        position: sticky;
+      }
 
-    .qref_more_above,
-    .qref_more_below {
-      display: none;
-      position: sticky;
-    }
+      .qref_link,
+      .qref_link *,
+      .qref_more_above,
+      .qref_more_above *,
+      .qref_more_below,
+      .qref_more_below * {
+        user-select: none;
+      }
 
-    .qref_link,
-    .qref_link *,
-    .qref_more_above,
-    .qref_more_above *,
-    .qref_more_below,
-    .qref_more_below * {
-      user-select: none;
-    }
+      .qref_link > a,
+      .qref_more_above > a,
+      .qref_more_below > a {
+        background: #FF9;
+        border: 1px dotted #777;
+        color: #777;
+        display: block;
+        font-family: sans-serif;
+        font-size: 12px;
+        height: 18px;
+        line-height: 18px;
+        text-decoration: none;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
 
-    .qref_link > a,
-    .qref_more_above > a,
-    .qref_more_below > a {
-      background: #FF9;
-      border: 1px dotted #777;
-      color: #777;
-      display: block;
-      font-family: sans-serif;
-      font-size: 12px;
-      height: 18px;
-      line-height: 18px;
-      text-decoration: none;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
+      .qref_link > a:hover,
+      .qref_more_above > a:hover,
+      .qref_more_below > a:hover {
+        background: #FF0;
+        border-color: #000;
+        color: #000;
+        cursor: pointer;
+      }
 
-    .qref_link > a:hover,
-    .qref_more_above > a:hover,
-    .qref_more_below > a:hover {
-      background: #FF0;
-      border-color: #000;
-      color: #000;
-      cursor: pointer;
-    }
+      .qref_link > a {
+        padding: 0 3px 0 1px;
+      }
 
-    .qref_link > a {
-      padding: 0 3px 0 1px;
-    }
+      .qref_link > a > svg {
+        vertical-align: -4px;
+      }
 
-    .qref_link > a > svg {
-      vertical-align: -4px;
-    }
+      .qref_more_above > a,
+      .qref_more_below > a {
+        padding: 0 3px;
+        position: absolute;
+        right: 0;
+      }
 
-    .qref_more_above > a,
-    .qref_more_below > a {
-      padding: 0 3px;
-      position: absolute;
-      right: 0;
-    }
+      .qref_more_above,
+      .qref_more_above > a {
+        top: 0;
+      }
 
-    .qref_more_above,
-    .qref_more_above > a {
-      top: 0;
-    }
+      .qref_more_below,
+      .qref_more_below > a {
+        bottom: 0;
+      }
 
-    .qref_more_below,
-    .qref_more_below > a {
-      bottom: 0;
-    }
-
-  `;
-
-  document.head.appendChild(style);
+    `;
+    document.head.appendChild(style);
+  }
 
   function is_char(node) {
     return node instanceof CharacterData;
