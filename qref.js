@@ -18,15 +18,15 @@ function qref(...args) {
 
   function get_viewport() {
     const style = window.getComputedStyle(root);
-    const border_left = parseFloat(style.borderLeftWidth);
-    const border_top = parseFloat(style.borderTopWidth);
-    const border_right = parseFloat(style.borderRightWidth);
-    const border_bottom = parseFloat(style.borderBottomWidth);
     const padding_left = parseFloat(style.paddingLeft);
     const padding_top = parseFloat(style.paddingTop);
     const padding_right = parseFloat(style.paddingRight);
     const padding_bottom = parseFloat(style.paddingBottom);
+    const border_left = parseFloat(style.borderLeftWidth);
+    const border_top = parseFloat(style.borderTopWidth);
     if (root === document.body) {
+      const border_right = parseFloat(style.borderRightWidth);
+      const border_bottom = parseFloat(style.borderBottomWidth);
       const margin_left = parseFloat(style.marginLeft);
       const margin_top = parseFloat(style.marginTop);
       const margin_right = parseFloat(style.marginRight);
