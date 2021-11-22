@@ -330,34 +330,6 @@ function qref(...args) {
     return addr1.length - addr2.length;
   }
 
-  function parse_addr(text) {
-    if (!/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/.test(text)) {
-      return null;
-    }
-    return text.split(".").map(x => parseInt(x));
-  }
-
-  function get_range_position(addr, node) {
-    if (node === undefined) {
-      node = root;
-    }
-    const offset = addr[0];
-    if (is_char(node)) {
-      if (offset > node.nodeValue.length) {
-        return null;
-      }
-    } else if (offset > node.childNodes.length) {
-      return null;
-    }
-    if (addr.length == 1) {
-      return {node, offset};
-    }
-    if (is_char(node)) {
-      return null;
-    }
-    return get_range_position(addr.slice(1), node.childNodes[offset]);
-  }
-
   function add_highlight(highlights, node, y) {
     if (!is_text(node) || y[0] == y[1]) {
       return;
@@ -460,6 +432,34 @@ function qref(...args) {
       document.URL.replace(/^[^?]*\??/, "").replace(/#.*/, "");
 
   const addr_pairs = [];
+
+  function parse_addr(text) {
+    if (!/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/.test(text)) {
+      return null;
+    }
+    return text.split(".").map(x => parseInt(x));
+  }
+
+  function get_range_position(addr, node) {
+    if (node === undefined) {
+      node = root;
+    }
+    const offset = addr[0];
+    if (is_char(node)) {
+      if (offset > node.nodeValue.length) {
+        return null;
+      }
+    } else if (offset > node.childNodes.length) {
+      return null;
+    }
+    if (addr.length == 1) {
+      return {node, offset};
+    }
+    if (is_char(node)) {
+      return null;
+    }
+    return get_range_position(addr.slice(1), node.childNodes[offset]);
+  }
 
   for (const param of query.split("&").map(x => x.split("=", 2))) {
     if (param.length == 2 && decodeURIComponent(param[0]) == "qref") {
