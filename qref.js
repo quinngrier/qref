@@ -462,11 +462,12 @@ function qref(...args) {
       return null;
     }
 
-    // Normalize the address, i.e., remove as many one-past-the-end
-    // components as possible, moving backwards. For example, if every
+    // Move backwards through the offsets, removing as many
+    // one-past-the-end components as possible. For example, if every
     // component of 1.2.3.4 is pointing at its last child except for the
-    // last component, which is pointing one-past-the-end, normalization
-    // will yield 1.2.3.4 -> 1.2.4 -> 1.3 -> 2.
+    // last component, which is pointing one-past-the-end, this produces
+    // 1.2.3.4 -> 1.2.4 -> 1.3 -> 2. Afterward, remove any trailing zero
+    // components.
     const container = (function() {
       let node = root;
       for (let i = 0; i < n - 1; ++i) {
@@ -475,6 +476,10 @@ function qref(...args) {
       while (n > 1 && offsets[n - 1] == node_length(node)) {
         node = node.parentNode;
         ++offsets[--n - 1];
+      }
+      while (n > 1 && offsets[n - 1] == 0) {
+        node = node.parentNode;
+        --n;
       }
       offsets.length = n;
       return node;
