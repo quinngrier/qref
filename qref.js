@@ -426,6 +426,10 @@ function qref(...args) {
     return highlights;
   }
 
+  function node_length(node) {
+    return (is_char(node) ? node.nodeValue : node.childNodes).length;
+  }
+
   //--------------------------------------------------------------------
 
   const query =
@@ -437,7 +441,47 @@ function qref(...args) {
     if (!/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/.test(text)) {
       return null;
     }
-    return text.split(".").map(x => parseInt(x));
+    const addr = text.split(".").map(x => parseInt(x));
+
+    // Verify that the address points to a valid location.
+    const valid = (function f(addr, i, node) {
+      if (is_char(node)) {
+        return i == addr.length - 1 && addr[i] <= node.nodeValue.length;
+      }
+      if (addr[i] > node.childNodes.length) {
+        return false;
+      }
+      if (i == addr.length - 1) {
+        return true;
+      }
+      if (addr[i] == node.childNodes.length) {
+        return false;
+      }
+      return f(addr, i + 1, node.childNodes[addr[i]]);
+    })(addr, 0, root);
+    if (!valid) {
+      return null;
+    }
+
+    // Normalize the address, i.e., remove as many one-past-the-end
+    // components as possible, moving backwards. For example, if every
+    // component of 1.2.3.4 is pointing at its last child except for the
+    // last component, which is pointing one-past-the-end, normalization
+    // will produce 1.2.3.4 -> 1.2.4 -> 1.3 -> 2.
+    {
+      let node = root;
+      let n = addr.length;
+      for (let i = 0; i < n - 1; ++i) {
+        node = node.childNodes[addr[i]];
+      }
+      while (n > 1 && addr[n - 1] == node_length(node)) {
+        node = node.parentNode;
+        ++addr[--n - 1];
+      }
+      addr.length = n;
+    }
+
+    return addr;
   }
 
   function get_range_position(addr, node) {
