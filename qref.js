@@ -331,7 +331,7 @@ function qref(...args) {
   }
 
   function parse_addr(text) {
-    if (!text.match(/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/)) {
+    if (!/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/.test(text)) {
       return null;
     }
     return text.split(".").map(x => parseInt(x));
