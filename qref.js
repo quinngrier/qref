@@ -690,7 +690,6 @@ function qref(...args) {
                               viewport.height - permalink_height)
                          - permalink_height,
                      0);
-      console.log("viewport.scroll.left = " + viewport.scroll.left);
       permalink.style.left = `${permalink_left}px`;
       permalink.style.top = `${permalink_top}px`;
     }
