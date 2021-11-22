@@ -105,7 +105,7 @@ function qref(...args) {
       color: #000;
     }
 
-    .qref_popup {
+    .qref_link {
       position: absolute;
     }
 
@@ -119,8 +119,8 @@ function qref(...args) {
       position: sticky;
     }
 
-    .qref_popup,
-    .qref_popup *,
+    .qref_link,
+    .qref_link *,
     .qref_more_above,
     .qref_more_above *,
     .qref_more_below,
@@ -128,7 +128,7 @@ function qref(...args) {
       user-select: none;
     }
 
-    .qref_popup > a,
+    .qref_link > a,
     .qref_more_above > a,
     .qref_more_below > a {
       background: #FF9;
@@ -144,7 +144,7 @@ function qref(...args) {
       white-space: nowrap;
     }
 
-    .qref_popup > a:hover,
+    .qref_link > a:hover,
     .qref_more_above > a:hover,
     .qref_more_below > a:hover {
       background: #FF0;
@@ -153,11 +153,11 @@ function qref(...args) {
       cursor: pointer;
     }
 
-    .qref_popup > a {
+    .qref_link > a {
       padding: 0 3px 0 1px;
     }
 
-    .qref_popup > a > svg {
+    .qref_link > a > svg {
       vertical-align: -4px;
     }
 
@@ -615,7 +615,7 @@ function qref(...args) {
     if (popup === null) {
       popup = document.createElement("div");
       popup.id = id;
-      popup.className = "qref_popup";
+      popup.className = "qref_link";
       popup.innerHTML = `
       <a href="">
         <!-- https://icons.getbootstrap.com/icons/link-45deg/ -->
