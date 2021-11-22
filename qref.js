@@ -157,7 +157,9 @@ function qref(...args) {
         padding: 0 3px 0 1px;
       }
 
-      .qref_link > a > svg {
+      .qref_link > a > svg,
+      .qref_more_above > a > svg,
+      .qref_more_below > a > svg {
         vertical-align: -4px;
       }
 
@@ -594,13 +596,29 @@ function qref(...args) {
 
   const more_above = document.createElement("div");
   more_above.className = "qref_more_above";
-  more_above.innerHTML = "<a>(<span>0</span> more above)</a>";
+  more_above.innerHTML = `
+    <a>
+      <span>0</span> more
+      <!-- https://icons.getbootstrap.com/icons/chevron-up/ -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-up" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+      </svg>
+    </a>
+  `;
   const more_above_n = more_above.children[0].children[0];
   root.insertBefore(more_above, root.firstChild);
 
   const more_below = document.createElement("div");
   more_below.className = "qref_more_below";
-  more_below.innerHTML = "<a>(<span>0</span> more below)</a>";
+  more_below.innerHTML = `
+    <a>
+      <span>0</span> more
+      <!-- https://icons.getbootstrap.com/icons/chevron-down/ -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+      </svg>
+    </a>
+  `;
   const more_below_n = more_below.children[0].children[0];
   root.insertBefore(more_below, root.lastChild);
 
@@ -617,14 +635,14 @@ function qref(...args) {
       popup.id = id;
       popup.className = "qref_link";
       popup.innerHTML = `
-      <a href="">
-        <!-- https://icons.getbootstrap.com/icons/link-45deg/ -->
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
-          <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
-          <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
-        </svg>Permalink
-      </a>
-    `;
+        <a href="">
+          <!-- https://icons.getbootstrap.com/icons/link-45deg/ -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
+            <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
+            <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
+          </svg>Permalink
+        </a>
+      `;
       permalink_container.appendChild(popup);
       ++popup_count;
     }
