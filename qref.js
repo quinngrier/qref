@@ -100,7 +100,7 @@ function qref(...args) {
     style.type = "text/css";
     style.innerHTML = `
 
-      .qref {
+      .qref_highlight {
         background: #FF9;
         color: #000;
       }
@@ -194,12 +194,12 @@ function qref(...args) {
     return node.nodeType === Node.ELEMENT_NODE;
   }
 
-  function is_qref(node) {
-    return is_element(node) && node.className === "qref";
+  function is_qref_highlight(node) {
+    return is_element(node) && node.className === "qref_highlight";
   }
 
   function is_squishy(node) {
-    return is_text(node) || is_qref(node);
+    return is_text(node) || is_qref_highlight(node);
   }
 
   function scroll_node_into_view(node) {
@@ -254,7 +254,7 @@ function qref(...args) {
         break;
       } else if (is_text(prev)) {
         length += prev.nodeValue.length;
-      } else if (is_qref(prev)) {
+      } else if (is_qref_highlight(prev)) {
         squished = true;
         length += prev.childNodes[0].nodeValue.length;
       } else {
@@ -280,7 +280,7 @@ function qref(...args) {
       }
       const parent = node.parentNode;
       if (is_text(node)) {
-        if (is_qref(parent)) {
+        if (is_qref_highlight(parent)) {
           const s = squish_left(parent);
           const addr = f(parent.parentNode, get_offset(s.node));
           return addr.concat(s.length + offset);
@@ -528,10 +528,10 @@ function qref(...args) {
       if (k < i) {
         new_nodes.push(document.createTextNode(s.substring(k, i)));
       }
-      const qref = document.createElement("span");
-      qref.className = "qref";
-      qref.textContent = s.substring(i, j);
-      new_nodes.push(qref);
+      const highlight = document.createElement("span");
+      highlight.className = "qref_highlight";
+      highlight.textContent = s.substring(i, j);
+      new_nodes.push(highlight);
       k = j;
     }
     if (k < n) {
