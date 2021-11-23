@@ -233,7 +233,7 @@ function qref(...args) {
     }
   }
 
-  function get_addr(container, offset) {
+  function compute_address(container, offset) {
     const offsets = (function f(container, offset) {
       if (container === root) {
         return [offset];
@@ -664,8 +664,8 @@ function qref(...args) {
           || !root.contains(range.endContainer)) {
         continue;
       }
-      const addr1 = get_addr(range.startContainer, range.startOffset);
-      const addr2 = get_addr(range.endContainer, range.endOffset);
+      const addr1 = compute_address(range.startContainer, range.startOffset);
+      const addr2 = compute_address(range.endContainer, range.endOffset);
       if (cmp_addr(addr1, addr2) == 0) {
         continue;
       }
