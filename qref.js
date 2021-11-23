@@ -8,8 +8,6 @@
 // <https://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-// TODO: Prefer textContent to nodeValue everywhere.
-
 function qref(...args) {
 
   const [root] = args;
@@ -374,7 +372,7 @@ function qref(...args) {
       function f4(x) {
         return x !== null && f3(x);
       }
-      if (/^\s*$/.test(node.nodeValue)
+      if (/^\s*$/.test(node.textContent)
           && !f1(window.getComputedStyle(node.parentNode).whiteSpace)
           && (f4(node.previousSibling) || f4(node.nextSibling))) {
         return;
@@ -391,7 +389,7 @@ function qref(...args) {
       const i = range.startOffset;
       const j = range.endOffset;
       if (is_char(node)) {
-        const n = node.nodeValue.length;
+        const n = node.textContent.length;
         if (is_start && is_end) {
           add_highlight(highlights, node, [i, j]);
         } else if (is_start) {
@@ -422,7 +420,7 @@ function qref(...args) {
   }
 
   function node_length(node) {
-    return (is_char(node) ? node.nodeValue : node.childNodes).length;
+    return (is_char(node) ? node.textContent : node.childNodes).length;
   }
 
   //--------------------------------------------------------------------
@@ -442,7 +440,7 @@ function qref(...args) {
 
     const valid = (function f(node, offsets, i) {
       if (is_char(node)) {
-        return i == n - 1 && offsets[i] <= node.nodeValue.length;
+        return i == n - 1 && offsets[i] <= node.textContent.length;
       }
       if (offsets[i] > node.childNodes.length) {
         return false;
@@ -551,7 +549,7 @@ function qref(...args) {
   for (const [node, pairs] of highlights) {
     pairs.sort((x, y) => x[0] - y[0]);
     const parent = node.parentNode;
-    const s = node.nodeValue;
+    const s = node.textContent;
     const n = s.length;
     let new_nodes = [];
     let k = 0;
