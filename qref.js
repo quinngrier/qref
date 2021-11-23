@@ -17,6 +17,17 @@ function qref(...args) {
   const root_n = root.childNodes.length;
 
   //--------------------------------------------------------------------
+  // get_viewport
+  //--------------------------------------------------------------------
+  //
+  // The get_viewport function returns the "visible" rectangle of the
+  // content of the root element, as well as how much content has been
+  // scrolled off the left and top sides. The rectangle is relative to
+  // the browser viewport, allowing it to be compared to any rectangle
+  // returned by the getBoundingClientRect function. Since padding is
+  // excluded, child elements of the root element can be absolutely
+  // positioned using subtractions between these rectangles.
+  //
 
   function get_viewport() {
     const style = window.getComputedStyle(root);
