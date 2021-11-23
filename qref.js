@@ -347,6 +347,7 @@ function qref(...args) {
       function f2(x) {
         return [
           "block",
+          "list-item",
           "table-cell",
           "table-column",
           "table-column-group",
