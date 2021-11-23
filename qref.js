@@ -112,7 +112,7 @@ function qref(...args) {
         position: absolute;
       }
 
-      .qref_permalink_container {
+      .qref_links {
         position: relative;
       }
 
@@ -626,9 +626,9 @@ function qref(...args) {
   const more_below_n = more_below.children[0].children[0];
   root.insertBefore(more_below, root.lastChild);
 
-  const permalink_container = document.createElement("div");
-  permalink_container.className = "qref_permalink_container";
-  root.insertBefore(permalink_container, root.firstChild);
+  const links = document.createElement("div");
+  links.className = "qref_links";
+  root.insertBefore(links, root.firstChild);
 
   let popup_count = 0;
   function get_popup(j) {
@@ -647,7 +647,7 @@ function qref(...args) {
           </svg>Permalink
         </a>
       `;
-      permalink_container.appendChild(popup);
+      links.appendChild(popup);
       ++popup_count;
     }
     return popup;
