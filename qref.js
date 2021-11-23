@@ -8,6 +8,8 @@
 // <https://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
+// TODO: Prefer textContent to nodeValue everywhere.
+
 function qref(...args) {
 
   const [root] = args;
@@ -196,12 +198,12 @@ function qref(...args) {
     return node.nodeType === Node.ELEMENT_NODE;
   }
 
-  function is_qref_highlight(node) {
-    return is_element(node) && node.className === "qref_highlight";
+  function is_wrapper(node) {
+    return is_element(node) && node.className === "qref_wrapper";
   }
 
-  function is_squishy(node) {
-    return is_text(node) || is_qref_highlight(node);
+  function is_highlight(node) {
+    return is_element(node) && node.className === "qref_highlight";
   }
 
   function scroll_node_into_view(node) {
@@ -219,7 +221,7 @@ function qref(...args) {
     } else if (offset < node.childNodes.length) {
       scroll_node_into_view(node.childNodes[offset]);
     } else {
-      while (node.nextSibling === null && node !== root) {
+      while (node !== root && node.nextSibling === null) {
         node = node.parentNode;
       }
       if (node !== root) {
@@ -230,94 +232,74 @@ function qref(...args) {
     }
   }
 
-  function get_offset(node) {
-    let i = 0;
-    let node_is_squishy = is_squishy(node);
-    while (true) {
-      const prev = node.previousSibling;
-      if (prev === null) {
-        return i;
-      }
-      const prev_is_squishy = is_squishy(prev);
-      if (!node_is_squishy || !prev_is_squishy) {
-        ++i;
-      }
-      node = prev;
-      node_is_squishy = prev_is_squishy;
-    }
-  }
-
-  function squish_left(node) {
-    let squished = false;
-    let length = 0;
-    while (true) {
-      const prev = node.previousSibling;
-      if (prev === null) {
-        break;
-      } else if (is_text(prev)) {
-        length += prev.nodeValue.length;
-      } else if (is_qref_highlight(prev)) {
-        squished = true;
-        length += prev.childNodes[0].nodeValue.length;
-      } else {
-        break;
-      }
-      node = prev;
-    }
-    return {squished, length, node};
-  }
-
-  function get_addr(node, offset) {
-    if (!is_char(node)) {
-      if (offset < node.childNodes.length) {
-        offset = get_offset(node.childNodes[offset]);
-      } else if (offset > 0) {
-        offset = get_offset(node.childNodes[offset - 1]) + 1;
-      }
-    }
-
-    const addr = (function f(node, offset) {
-      if (node === root) {
+  function get_addr(container, offset) {
+    const offsets = (function f(container, offset) {
+      if (container === root) {
         return [offset];
       }
-      const parent = node.parentNode;
-      if (is_text(node)) {
-        if (is_qref_highlight(parent)) {
-          const s = squish_left(parent);
-          const addr = f(parent.parentNode, get_offset(s.node));
-          return addr.concat(s.length + offset);
+      const parent = container.parentNode;
+      const parent_offset = (function() {
+        let i = 0;
+        while (parent.childNodes[i] !== container) {
+          ++i;
         }
-        const s = squish_left(node);
-        if (s.squished) {
-          const addr = f(parent, get_offset(s.node));
-          return addr.concat(s.length + offset);
+        return i;
+      })();
+      if (is_wrapper(container)) {
+        if (offset == container.childNodes.length) {
+          return f(parent, parent_offset + 1);
         }
+        const offsets = f(parent, parent_offset);
+        let n = 0;
+        for (let i = 0; i < offset; ++i) {
+          n += container.childNodes[i].textContent.length;
+        }
+        offsets.push(n);
+        return offsets;
+      } else if (is_highlight(container)) {
+        if (offset == 1) {
+          return f(parent, parent_offset + 1);
+        }
+        return f(parent, parent_offset);
+      } else if (!is_text(container)) {
+        if (offset == container.childNodes.length) {
+          return f(parent, parent_offset + 1);
+        }
+        const offsets = f(parent, parent_offset);
+        offsets.push(offset);
+        return offsets;
+      } else if (is_wrapper(parent) || is_highlight(parent)) {
+        if (offset == container.textContent.length) {
+          return f(parent, parent_offset + 1);
+        }
+        const offsets = f(parent, parent_offset);
+        offsets[offsets.length - 1] += offset;
+        return offsets;
+      } else {
+        if (offset == container.textContent.length) {
+          return f(parent, parent_offset + 1);
+        }
+        const offsets = f(parent, parent_offset);
+        offsets.push(offset);
+        return offsets;
       }
-      const addr = f(parent, get_offset(node));
-      return addr.concat([offset]);
-    })(node, offset);
+    })(container, offset);
 
-    // Adjust and clamp to the original root.childNodes array.
-    addr[0] -= 2;
-    if (addr[0] < 0) {
+    // Adjust and clamp the offsets to the original root.childNodes.
+    offsets[0] -= 2;
+    if (offsets[0] < 0) {
       return [0];
     }
-    if (addr[0] > root_n) {
+    if (offsets[0] > root_n) {
       return [root_n];
     }
 
-    // Remove any trailing zeros.
-    {
-      let i = addr.length;
-      while (--i > 0) {
-        if (addr[i] > 0) {
-          break;
-        }
-      }
-      addr.length = i + 1;
+    // Remove any trailing zero components.
+    while (offsets.length > 0 && offsets[offsets.length - 1] == 0) {
+      --offsets.length;
     }
 
-    return addr;
+    return offsets;
   }
 
   function cmp_addr(addr1, addr2) {
@@ -435,15 +417,17 @@ function qref(...args) {
   //--------------------------------------------------------------------
 
   function parse_address(text) {
+    const msg = "Ignoring invalid qref address in query string: ";
+
     if (!/^(0|[1-9][0-9]{0,9})(\.(0|[1-9][0-9]{0,9}))*$/.test(text)) {
+      console.warn(msg + JSON.stringify(text));
       return null;
     }
 
     const offsets = text.split(".").map(x => parseInt(x));
     let n = offsets.length;
 
-    // Validate the address.
-    const valid = (function f(offsets, i, node) {
+    const valid = (function f(node, offsets, i) {
       if (is_char(node)) {
         return i == n - 1 && offsets[i] <= node.nodeValue.length;
       }
@@ -456,9 +440,10 @@ function qref(...args) {
       if (offsets[i] == node.childNodes.length) {
         return false;
       }
-      return f(offsets, i + 1, node.childNodes[offsets[i]]);
-    })(offsets, 0, root);
+      return f(node.childNodes[offsets[i]], offsets, i + 1);
+    })(root, offsets, 0);
     if (!valid) {
+      console.warn(msg + JSON.stringify(text));
       return null;
     }
 
@@ -579,7 +564,7 @@ function qref(...args) {
       if (container === node) {
         let i = 0;
         let n = new_nodes[0].textContent.length;
-        while (n < offset) {
+        while (n <= offset) {
           n += new_nodes[++i].textContent.length;
         }
         container = new_nodes[i];
@@ -587,19 +572,6 @@ function qref(...args) {
           container = container.childNodes[0];
         }
         offset = container.textContent.length - (n - offset);
-      } else if (container === parent) {
-        if (node_offset === null) {
-          let i = 0;
-          for (; i < parent.childNodes.length; ++i) {
-            if (node === parent.childNodes[i]) {
-              break;
-            }
-          }
-          node_offset = i;
-        }
-        if (offset > node_offset) {
-          offset += new_nodes.length - 1;
-        }
       }
       return {container, offset};
     }
@@ -608,14 +580,12 @@ function qref(...args) {
       ends.push(foo(range.endContainer, range.endOffset));
     }
 
-    // Perform the DOM change to highlight this node.
-    {
-      let i = new_nodes.length - 1;
-      parent.replaceChild(new_nodes[i], node);
-      while (i-- > 0) {
-        parent.insertBefore(new_nodes[i], new_nodes[i + 1]);
-      }
+    const wrapper = document.createElement("span");
+    wrapper.className = "qref_wrapper";
+    for (let i = 0; i < new_nodes.length; ++i) {
+      wrapper.appendChild(new_nodes[i]);
     }
+    parent.replaceChild(wrapper, node);
 
     // Update the ranges.
     for (let i = 0; i < ranges.length; ++i) {
