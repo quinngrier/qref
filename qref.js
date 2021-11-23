@@ -8,6 +8,17 @@
 // <https://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
+// TODO: Sometimes the more buttons scroll way above where they should,
+//       as our scrolling to a text node scrolls to the parent, which
+//       can sometimes start way further up. Maybe scrollTo is better,
+//       or finding a qref_wrapper in the range to scroll into view
+//       (which should always exist?).
+
+// TODO: Is it possible to get a "blank" range that ends up not being
+//       pruned by way of certain whitespace-only nodes not being
+//       highlighted? Maybe we can make get_highlights return whether
+//       anything was highlighted, and prune the ranges based on that.
+
 function qref(...args) {
 
   const [root] = args;
