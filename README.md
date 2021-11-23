@@ -21,8 +21,8 @@ same URL, separating them with `&` characters, or collapse them into a
 single `qref=` parameter, separating the values with `+` characters.
 For example, the following permalinks are equivalent:
 
-* https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1.0.0-1.0.4&qref=1.0.15-1.0.21
-* https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1.0.0-1.0.4+1.0.15-1.0.21
+* https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1-1.0.4&qref=1.0.15-2
+* https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1-1.0.4+1.0.15-2
 
 To add Qref to an HTML page, simply include it in the `<head>` element
 as follows:
