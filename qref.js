@@ -104,6 +104,7 @@ function qref(...args) {
 
       .qref_highlight {
         background: #FF9;
+        border: 1px dotted #777;
         color: #000;
       }
 
