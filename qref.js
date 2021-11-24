@@ -19,9 +19,6 @@
 //       highlighted? Maybe we can make get_highlights return whether
 //       anything was highlighted, and prune the ranges based on that.
 
-// TODO: get_viewport is probably still slightly wrong for
-//       document.body.
-
 function qref(...args) {
 
   const [root] = args;
@@ -42,7 +39,7 @@ function qref(...args) {
   //
 
   function get_viewport() {
-    const bound = root.getBoundingClientRect();
+    const root_bound = root.getBoundingClientRect();
     const style = window.getComputedStyle(root);
     const padding_left = parseFloat(style.paddingLeft);
     const padding_top = parseFloat(style.paddingTop);
@@ -51,40 +48,43 @@ function qref(...args) {
     const border_left = parseFloat(style.borderLeftWidth);
     const border_top = parseFloat(style.borderTopWidth);
     if (root === document.body) {
-      const html = document.documentElement;
+      const root_bound_width = root_bound.right - root_bound.left;
+      const root_bound_height = root_bound.bottom - root_bound.top;
       const border_right = parseFloat(style.borderRightWidth);
       const border_bottom = parseFloat(style.borderBottomWidth);
-      const margin_left = parseFloat(style.marginLeft);
-      const margin_top = parseFloat(style.marginTop);
-      const margin_right = parseFloat(style.marginRight);
-      const margin_bottom = parseFloat(style.marginBottom);
-      const space_left =
-          bound.left + html.scrollLeft + border_left + padding_left;
+      const html = document.documentElement;
+      const html_bound = html.getBoundingClientRect();
+      const html_client_width = html_bound.right - html_bound.left;
+      const html_client_height = html.clientHeight;
+      const space_left = root_bound.left + html.scrollLeft + border_left
+                         + padding_left;
       const space_top =
-          bound.top + html.scrollTop + border_top + padding_top;
-      const space_right = margin_right + border_right + padding_right;
-      const space_bottom =
-          margin_bottom + border_bottom + padding_bottom;
+          root_bound.top + html.scrollTop + border_top + padding_top;
+      const space_right = html_client_width - root_bound_width
+                          - (root_bound.left + html.scrollLeft)
+                          + border_right + padding_right;
+      const space_bottom = html_client_height - root_bound_height
+                           - (root_bound.top + html.scrollTop)
+                           + border_bottom + padding_bottom;
       const overlap_left = Math.max(space_left - html.scrollLeft, 0);
       const overlap_top = Math.max(space_top - html.scrollTop, 0);
       const overlap_right =
           Math.max(space_right
-                       - (margin_left + border_left + root.scrollWidth
-                          + border_right + margin_right
-                          - html.scrollLeft - html.clientWidth),
+                       - (html.scrollWidth - html.scrollLeft
+                          - html_client_width),
                    0);
       const overlap_bottom =
           Math.max(space_bottom
-                       - (margin_top + border_top + root.scrollHeight
-                          + border_bottom + margin_bottom
-                          - html.scrollTop - html.clientHeight),
+                       - (html.scrollHeight - html.scrollTop
+                          - html_client_height),
                    0);
       const left = Math.max(space_left - html.scrollLeft, 0);
       const top = Math.max(space_top - html.scrollTop, 0);
       const width =
-          Math.max(html.clientWidth - overlap_left - overlap_right, 0);
+          Math.max(html_client_width - overlap_left - overlap_right, 0);
       const height =
-          Math.max(html.clientHeight - overlap_top - overlap_bottom, 0);
+          Math.max(html_client_height - overlap_top - overlap_bottom,
+                   0);
       const right = left + width;
       const bottom = top + height;
       const scroll = {
@@ -104,8 +104,8 @@ function qref(...args) {
                        - (root.scrollHeight - root.scrollTop
                           - root.clientHeight),
                    0);
-      const left = bound.left + border_left + overlap_left;
-      const top = bound.top + border_top + overlap_top;
+      const left = root_bound.left + border_left + overlap_left;
+      const top = root_bound.top + border_top + overlap_top;
       const width =
           Math.max(root.clientWidth - overlap_left - overlap_right, 0);
       const height =
