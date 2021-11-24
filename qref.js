@@ -8,13 +8,7 @@
 // <https://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-// TODO: Sometimes the more buttons scroll way above where they should,
-//       as our scrolling to a text node scrolls to the parent, which
-//       can sometimes start way further up. Maybe scrollTo is better,
-//       or finding a qref_wrapper in the range to scroll into view
-//       (which should always exist?).
-
-// TODO: Is it possible to get a "blank" range that ends up not being
+// TODO: It's possible to get a "blank" range that ends up not being
 //       pruned by way of certain whitespace-only nodes not being
 //       highlighted? Maybe we can make get_highlights return whether
 //       anything was highlighted, and prune the ranges based on that.
@@ -231,29 +225,72 @@ function qref(...args) {
     return is_element(node) && node.className === "qref_highlight";
   }
 
-  function scroll_node_into_view(node) {
-    if (is_char(node)) {
-      node = node.parentNode;
-    }
-    node.scrollIntoView();
-  }
-
   function scroll_range_into_view(range) {
-    let node = range.startContainer;
-    const offset = range.startOffset;
-    if (is_char(node)) {
-      scroll_node_into_view(node);
-    } else if (offset < node.childNodes.length) {
-      scroll_node_into_view(node.childNodes[offset]);
+
+    // Save the ranges.
+    old_ranges = [];
+    for (const range of ranges) {
+      old_ranges.push({
+        start: {
+          container: range.startContainer,
+          offset: range.startOffset,
+        },
+        end: {
+          container: range.endContainer,
+          offset: range.endOffset,
+        },
+      });
+    }
+
+    const {container, offset} = (function() {
+      if (is_char(range.startContainer)) {
+        const container = range.startContainer;
+        const offset = range.startOffset;
+        console.assert(
+            offset < container.textContent.length,
+            "get_address() failed to normalize all one-past-the-end components.");
+        return {container, offset};
+      }
+      const x = range.startContainer.childNodes;
+      const i = range.startOffset;
+      console.assert(
+          i < x.length,
+          "get_address() failed to normalize all one-past-the-end components.");
+      const container = x[i];
+      const offset = 0;
+      return {container, offset};
+    })();
+
+    if (!is_char(container)) {
+      container.scrollIntoView();
+    } else if (offset == 0) {
+      const span = document.createElement("span");
+      const parent = container.parentNode;
+      parent.insertBefore(span, container);
+      span.scrollIntoView();
+      parent.removeChild(span);
     } else {
-      while (node !== root && node.nextSibling === null) {
-        node = node.parentNode;
-      }
-      if (node !== root) {
-        scroll_node_into_view(node.nextSibling);
-      } else if (root.firstChild !== null) {
-        scroll_node_into_view(root.firstChild);
-      }
+      const span = document.createElement("span");
+      const parent = container.parentNode;
+      const s1 = container.textContent.substring(0, offset);
+      const s2 = container.textContent.substring(offset);
+      const x1 = document.createTextNode(s1);
+      const x2 = document.createTextNode(s2);
+      span.addChild(x2);
+      parent.replaceChild(span, container);
+      parent.insertBefore(x1, span);
+      span.scrollIntoView();
+      parent.removeChild(x1);
+      parent.replaceChild(container, span);
+    }
+
+    // Restore the ranges.
+    for (let i = 0; i < ranges.length; ++i) {
+      const start = old_ranges[i].start;
+      const end = old_ranges[i].end;
+      ranges[i] = document.createRange();
+      ranges[i].setStart(start.container, start.offset);
+      ranges[i].setEnd(end.container, end.offset);
     }
   }
 
@@ -557,10 +594,6 @@ function qref(...args) {
     get_highlights(highlights, range);
   }
 
-  if (ranges.length > 0) {
-    scroll_range_into_view(ranges[0], true);
-  }
-
   for (const [node, pairs] of highlights) {
     pairs.sort((x, y) => x[0] - y[0]);
     const parent = node.parentNode;
@@ -619,6 +652,10 @@ function qref(...args) {
       ranges[i].setStart(starts[i].container, starts[i].offset);
       ranges[i].setEnd(ends[i].container, ends[i].offset);
     }
+  }
+
+  if (ranges.length > 0) {
+    scroll_range_into_view(ranges[0]);
   }
 
   //--------------------------------------------------------------------
