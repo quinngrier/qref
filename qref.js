@@ -10,6 +10,10 @@
 
 // https://github.com/quinngrier/qref
 
+// TODO: Instead of using color: #000 in .qref_highlight, adjust the
+//       color of every .qref_highlight node individually by adjusting
+//       the existing color, if necessary, to give a minimum contrast.
+
 function qref(...args) {
 
   const [root] = args;
