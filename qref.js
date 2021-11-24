@@ -510,7 +510,7 @@ function qref(...args) {
       return null;
     }
 
-    // Move backwards through the offsets, removing as many
+    // Move backwards through the offsets, normalizing as many
     // one-past-the-end components as possible. For example, if every
     // component of 1.2.3.4 is pointing at its last child except for the
     // last component, which is pointing one-past-the-end, this produces
