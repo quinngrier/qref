@@ -858,6 +858,8 @@ function qref(...args) {
   });
 }
 
+//----------------------------------------------------------------------
+
 {
   const root = window.qref_root_element;
   if (root !== null) {
