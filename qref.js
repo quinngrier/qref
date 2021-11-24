@@ -13,6 +13,9 @@
 // TODO: Instead of using color: #000 in .qref_highlight, adjust the
 //       color of every .qref_highlight node individually by adjusting
 //       the existing color, if necessary, to give a minimum contrast.
+//       Maybe convert RGB to HSL, adjust L up or down to satisfy the
+//       minimum contrast (whichever of up or down will be a smaller
+//       change), then convert back to RGB.
 
 function qref(...args) {
 
