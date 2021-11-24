@@ -624,7 +624,11 @@ function qref(...args) {
         let i = 0;
         let n = new_nodes[0].textContent.length;
         while (n <= offset) {
-          n += new_nodes[++i].textContent.length;
+          ++i;
+          console.assert(
+              i < new_nodes.length,
+              "get_address() failed to normalize all one-past-the-end components.");
+          n += new_nodes[i].textContent.length;
         }
         container = new_nodes[i];
         if (!is_text(container)) {
