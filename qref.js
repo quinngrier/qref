@@ -220,8 +220,26 @@ function qref(...args) {
     return is_element(node) && node.className === "qref_highlight";
   }
 
-  function scroll_range_into_view(range) {
+  //--------------------------------------------------------------------
+  // node_length
+  //--------------------------------------------------------------------
 
+  function node_length(node) {
+    return (is_char(node) ? node.textContent : node.childNodes).length;
+  }
+
+  //--------------------------------------------------------------------
+  // assert_normalized
+  //--------------------------------------------------------------------
+
+  function assert_normalized(condition) {
+    const message = "Unexpected unnormalized range boundary.";
+    console.assert(condition, message);
+  }
+
+  //--------------------------------------------------------------------
+
+  function scroll_range_into_view(range) {
     // Save the ranges.
     old_ranges = [];
     for (const range of ranges) {
@@ -241,16 +259,12 @@ function qref(...args) {
       if (is_char(range.startContainer)) {
         const container = range.startContainer;
         const offset = range.startOffset;
-        console.assert(
-            offset < container.textContent.length,
-            "get_address() failed to normalize all one-past-the-end components.");
+        assert_normalized(offset < container.textContent.length);
         return {container, offset};
       }
       const x = range.startContainer.childNodes;
       const i = range.startOffset;
-      console.assert(
-          i < x.length,
-          "get_address() failed to normalize all one-past-the-end components.");
+      assert_normalized(i < x.length);
       const container = x[i];
       const offset = 0;
       return {container, offset};
@@ -466,10 +480,6 @@ function qref(...args) {
     return highlights;
   }
 
-  function node_length(node) {
-    return (is_char(node) ? node.textContent : node.childNodes).length;
-  }
-
   //--------------------------------------------------------------------
   // Parse the query string and do the highlighting
   //--------------------------------------------------------------------
@@ -620,9 +630,7 @@ function qref(...args) {
         let n = new_nodes[0].textContent.length;
         while (n <= offset) {
           ++i;
-          console.assert(
-              i < new_nodes.length,
-              "get_address() failed to normalize all one-past-the-end components.");
+          assert_normalized(i < new_nodes.length);
           n += new_nodes[i].textContent.length;
         }
         container = new_nodes[i];
