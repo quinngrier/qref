@@ -761,12 +761,8 @@ function qref(...args) {
           + Math.max(Math.min(range_left - viewport.left,
                               viewport.width - permalink_width),
                      0);
-      const permalink_top =
-          viewport.scroll.top
-          + Math.max(Math.min(range_top - viewport.top,
-                              viewport.height - permalink_height)
-                         - permalink_height,
-                     0);
+      const permalink_top = viewport.scroll.top + range_top
+                            - viewport.top - permalink_height;
       permalink.style.left = `${permalink_left}px`;
       permalink.style.top = `${permalink_top}px`;
     }
