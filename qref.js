@@ -8,11 +8,6 @@
 // <https://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-// TODO: It's possible to get a "blank" range that ends up not being
-//       pruned by way of certain whitespace-only nodes not being
-//       highlighted? Maybe we can make get_highlights return whether
-//       anything was highlighted, and prune the ranges based on that.
-
 function qref(...args) {
 
   const [root] = args;
