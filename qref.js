@@ -241,7 +241,7 @@ function qref(...args) {
 
   function scroll_range_into_view(range) {
     // Save the ranges.
-    old_ranges = [];
+    const old_ranges = [];
     for (const range of ranges) {
       old_ranges.push({
         start: {
