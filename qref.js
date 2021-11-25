@@ -8,7 +8,27 @@
 // <https://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-// https://github.com/quinngrier/qref
+//
+// This is Qref, a JavaScript addon that adds selection permalinking to
+// an HTML page. Simply add it to the bottom of the <head> element as
+// follows:
+//
+//       <head>
+//         ...
+//         <script defer src="qref.js"></script>
+//       </head>
+//
+// Then open the page and try selecting some text. A permalink popup
+// should appear at the beginning of the selection. When you open it,
+// the selection will be highlighted and scrolled into view. Multiple
+// qref= parameters can be added to the same URL.
+//
+// See <https://manuals.quinngrier.com/bash/4.1/bashref.html> for an
+// example of Qref in action. Try selecting some text and making some
+// permalinks.
+//
+// See <https://github.com/quinngrier/qref> for more information.
+//
 
 // TODO: Support prefixing, i.e., so "foo_qref" can be used instead of
 //       "qref" everywhere.

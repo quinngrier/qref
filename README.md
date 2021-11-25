@@ -15,17 +15,17 @@ This lets you create permalinks to arbitrary parts of the page.
 
 Multiple selection permalinks can be created in browsers that natively
 support multiple selection (e.g., using the Ctrl key in Firefox), or by
-manually combining several permalinks.
-To combine several permalinks, add all of the `qref=` parameters to the
+manually combining multiple permalinks.
+To combine multiple permalinks, add all of the `qref=` parameters to the
 same URL, separating them with `&` characters, or collapse them into a
 single `qref=` parameter, separating the values with `+` characters.
-For example, the following permalinks are equivalent:
+For example, the following two permalinks are equivalent:
 
 * https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1-1.0.4&qref=1.0.15-2
 * https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1-1.0.4+1.0.15-2
 
 To add Qref to an HTML page, simply add it to the bottom of the `<head>`
-element:
+element as follows:
 
 ```
 <head>
