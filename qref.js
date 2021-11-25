@@ -870,7 +870,7 @@ function qref(...args) {
 
 //----------------------------------------------------------------------
 
-{
+window.addEventListener("load", function() {
   const root = window.qref_root_element;
   if (root !== null) {
     if (root === undefined) {
@@ -883,4 +883,4 @@ function qref(...args) {
       qref(root);
     }
   }
-}
+});
