@@ -10,6 +10,9 @@
 
 // https://github.com/quinngrier/qref
 
+// TODO: Support prefixing, i.e., so "foo_qref" can be used instead of
+//       "qref" everywhere.
+
 // TODO: Instead of using color: #000 in .qref_highlight, adjust the
 //       color of every .qref_highlight node individually by adjusting
 //       the existing color, if necessary, to give a minimum contrast.
