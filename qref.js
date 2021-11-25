@@ -867,14 +867,14 @@ function qref(...args) {
 //----------------------------------------------------------------------
 
 {
-  const root = window.qref_default_root_element;
+  const root = window.qref_root_element;
   if (root !== null) {
     if (root === undefined) {
       qref(document.body);
     } else if (!(root instanceof HTMLElement)) {
-      console.error("Invalid qref_default_root_element.");
+      console.error("Invalid qref_root_element.");
     } else if (!document.body.contains(root)) {
-      console.error("Invalid qref_default_root_element.");
+      console.error("Invalid qref_root_element.");
     } else {
       qref(root);
     }
