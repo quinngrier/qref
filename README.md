@@ -24,11 +24,14 @@ For example, the following permalinks are equivalent:
 * https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1-1.0.4&qref=1.0.15-2
 * https://manuals.quinngrier.com/bash/4.1/bashref.html?qref=1-1.0.4+1.0.15-2
 
-To add Qref to an HTML page, simply add it to the `<head>` element as
-follows:
+To add Qref to an HTML page, simply add it to the bottom of the `<head>`
+element:
 
 ```
-<script defer src="https://cdn.jsdelivr.net/npm/qref"></script>
+<head>
+  ...
+  <script defer src="https://cdn.jsdelivr.net/npm/qref"></script>
+</head>
 ```
 
 You can also pin it to a specific version number:
