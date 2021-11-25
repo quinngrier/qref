@@ -146,6 +146,7 @@ function qref(...args) {
       .qref_more_below {
         display: none;
         position: sticky;
+        z-index: 32767;
       }
 
       .qref_link,
