@@ -297,7 +297,7 @@ function qref(...args) {
       const s2 = container.textContent.substring(offset);
       const x1 = document.createTextNode(s1);
       const x2 = document.createTextNode(s2);
-      span.addChild(x2);
+      span.appendChild(x2);
       parent.replaceChild(span, container);
       parent.insertBefore(x1, span);
       span.scrollIntoView();
