@@ -135,6 +135,7 @@ function qref(...args) {
 
       .qref_link {
         position: absolute;
+        z-index: 32767;
       }
 
       .qref_links {
