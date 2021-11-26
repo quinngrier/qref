@@ -33,12 +33,6 @@
 // TODO: Support prefixing, i.e., so "foo_qref" can be used instead of
 //       "qref" everywhere.
 
-// TODO: Change the color adjustment to use getComputedStyle to find the
-//       background color for each individual .qref_highlight element
-//       after adding all new nodes to the DOM. This will give long-term
-//       flexibility for users to override the .qref_highlight coloring
-//       in custom ways.
-
 // TODO: Change the color adjustment to compute the scalar that would be
 //       used for white (or black, for a dark background) and apply it
 //       uniformly to all colors.
@@ -68,10 +62,6 @@ function qref(...args) {
 
   //--------------------------------------------------------------------
 
-  const bg_r = bg_r_xx / 255;
-  const bg_g = bg_g_xx / 255;
-  const bg_b = bg_b_xx / 255;
-  const bg_luminance = compute_luminance(bg_r, bg_g, bg_b);
   const cr = 2.5;
 
   //--------------------------------------------------------------------
@@ -89,7 +79,7 @@ function qref(...args) {
   }
 
   //--------------------------------------------------------------------
-  // adjust_color
+  // ensure_contrast
   //--------------------------------------------------------------------
   //
   // We want to adjust the highlight text color, if necessary, to have
@@ -156,36 +146,37 @@ function qref(...args) {
   // being adjusted to the same color.
   //
 
-  function adjust_color(color) {
-    color = get_rgba(color);
-    if (color !== null) {
-      let fg_r = color[0] / 255;
-      let fg_g = color[1] / 255;
-      let fg_b = color[2] / 255;
-      if (bg_luminance > 0.5) {
-        let ck =
-            (361 * bg_b + 3576 * bg_g + 1063 * bg_r - 250 * cr + 250)
-            / (361 * cr * fg_b + 3576 * cr * fg_g + 1063 * cr * fg_r);
-        if (ck >= 0 && ck <= 1) {
-          ck *= compute_luminance(fg_r, fg_g, fg_b);
-          const alpha = color.length > 3 ? color[3] : "1";
-          fg_r = Math.round(fg_r * ck * 255);
-          fg_g = Math.round(fg_g * ck * 255);
-          fg_b = Math.round(fg_b * ck * 255);
-          return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
-        }
-      } else {
-        let ck = -((361 * bg_b + 3576 * bg_g + 1063 * bg_r + 250) * cr
-                   - 361 * fg_b - 3576 * fg_g - 1063 * fg_r - 250)
-                 / (361 * fg_b + 3576 * fg_g + 1063 * fg_r - 5000);
-        if (ck >= 0 && ck <= 1) {
-          ck *= 1 - compute_luminance(fg_r, fg_g, fg_b);
-          const alpha = color.length > 3 ? color[3] : "1";
-          fg_r = Math.round((fg_r + (1 - fg_r) * ck) * 255);
-          fg_g = Math.round((fg_g + (1 - fg_g) * ck) * 255);
-          fg_b = Math.round((fg_b + (1 - fg_b) * ck) * 255);
-          return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
-        }
+  function ensure_contrast(fg, bg, cr) {
+    const bg_r = bg[0] / 255;
+    const bg_g = bg[1] / 255;
+    const bg_b = bg[2] / 255;
+    const bg_l = compute_luminance(bg_r, bg_g, bg_b);
+    let fg_r = fg[0] / 255;
+    let fg_g = fg[1] / 255;
+    let fg_b = fg[2] / 255;
+    if (bg_l > 0.5) {
+      let ck =
+          (361 * bg_b + 3576 * bg_g + 1063 * bg_r - 250 * cr + 250)
+          / (361 * cr * fg_b + 3576 * cr * fg_g + 1063 * cr * fg_r);
+      if (ck >= 0 && ck <= 1) {
+        ck *= compute_luminance(fg_r, fg_g, fg_b);
+        const alpha = fg.length > 3 ? fg[3] : "1";
+        fg_r = Math.round(fg_r * ck * 255);
+        fg_g = Math.round(fg_g * ck * 255);
+        fg_b = Math.round(fg_b * ck * 255);
+        return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
+      }
+    } else {
+      let ck = -((361 * bg_b + 3576 * bg_g + 1063 * bg_r + 250) * cr
+                 - 361 * fg_b - 3576 * fg_g - 1063 * fg_r - 250)
+               / (361 * fg_b + 3576 * fg_g + 1063 * fg_r - 5000);
+      if (ck >= 0 && ck <= 1) {
+        ck *= 1 - compute_luminance(fg_r, fg_g, fg_b);
+        const alpha = fg.length > 3 ? fg[3] : "1";
+        fg_r = Math.round((fg_r + (1 - fg_r) * ck) * 255);
+        fg_g = Math.round((fg_g + (1 - fg_g) * ck) * 255);
+        fg_b = Math.round((fg_b + (1 - fg_b) * ck) * 255);
+        return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
       }
     }
     return null;
@@ -791,15 +782,6 @@ function qref(...args) {
       const highlight = document.createElement("span");
       highlight.className = "qref_highlight";
       highlight.textContent = s.substring(i, j);
-
-      const style = window.getComputedStyle(node.parentNode);
-      for (const property of ["color", "text-decoration-color", ]) {
-        const color = adjust_color(style.getPropertyValue(property));
-        if (color !== null) {
-          highlight.style.setProperty(property, color, "important");
-        }
-      }
-
       new_nodes.push(highlight);
       k = j;
     }
@@ -839,6 +821,29 @@ function qref(...args) {
       wrapper.appendChild(new_nodes[i]);
     }
     parent.replaceChild(wrapper, node);
+
+    for (let i = 0; i < new_nodes.length; ++i) {
+      const highlight = new_nodes[i];
+      if (!is_element(highlight)) {
+        continue;
+      }
+      const style = window.getComputedStyle(highlight);
+      const bg = get_rgba(style.backgroundColor);
+      if (bg === null) {
+        continue;
+      }
+      for (const property of ["color", "text-decoration-color", ]) {
+        let fg = get_rgba(style.getPropertyValue(property));
+        if (fg === null) {
+          continue;
+        }
+        fg = ensure_contrast(fg, bg, cr);
+        if (fg === null) {
+          continue;
+        }
+        highlight.style.setProperty(property, fg, "important");
+      }
+    }
 
     // Update the ranges.
     for (let i = 0; i < ranges.length; ++i) {
