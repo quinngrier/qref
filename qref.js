@@ -45,18 +45,27 @@ function qref(...args) {
   const bg_g_xx = 255;
   const bg_b_xx = 153;
 
+  //--------------------------------------------------------------------
+  // compute_luminance
+  //--------------------------------------------------------------------
+
+  function compute_luminance(r, g, b) {
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  //--------------------------------------------------------------------
+
   const bg_r = bg_r_xx / 255;
   const bg_g = bg_g_xx / 255;
   const bg_b = bg_b_xx / 255;
-  const bg_luminance = 0.2126 * bg_r + 0.7152 * bg_g + 0.0722 * bg_b;
+  const bg_luminance = compute_luminance(bg_r, bg_g, bg_b);
   const cr = 2.5;
 
   //--------------------------------------------------------------------
-  // get_color
+  // get_rgba
   //--------------------------------------------------------------------
 
-  function get_color(element) {
-    const color = window.getComputedStyle(element).color;
+  function get_rgba(color) {
     if (color.startsWith("rgb")) {
       const i = color.indexOf("(");
       const j = color.indexOf(")");
@@ -127,18 +136,25 @@ function qref(...args) {
   // If this produces a ck value in [0,1], then we use ck to scale the
   // text color toward white. Otherwise, we leave the text color alone.
   //
+  // We also scale ck by L (or 1-L) for a light (or dark) highlight
+  // background color, where L is the luminance of the original text
+  // color. This helps text colors that differ only in luminance to
+  // maintain a difference in luminance after adjustment instead of
+  // being adjusted to the same color.
+  //
 
-  function adjust_color(element) {
-    const color = get_color(element);
+  function adjust_color(color) {
+    color = get_rgba(color);
     if (color !== null) {
       let fg_r = color[0] / 255;
       let fg_g = color[1] / 255;
       let fg_b = color[2] / 255;
       if (bg_luminance > 0.5) {
-        const ck =
+        let ck =
             (361 * bg_b + 3576 * bg_g + 1063 * bg_r - 250 * cr + 250)
             / (361 * cr * fg_b + 3576 * cr * fg_g + 1063 * cr * fg_r);
         if (ck >= 0 && ck <= 1) {
+          ck *= compute_luminance(fg_r, fg_g, fg_b);
           const alpha = color.length > 3 ? color[3] : "1";
           fg_r = Math.round(fg_r * ck * 255);
           fg_g = Math.round(fg_g * ck * 255);
@@ -146,11 +162,11 @@ function qref(...args) {
           return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
         }
       } else {
-        const ck =
-            -((361 * bg_b + 3576 * bg_g + 1063 * bg_r + 250) * cr
-              - 361 * fg_b - 3576 * fg_g - 1063 * fg_r - 250)
-            / (361 * fg_b + 3576 * fg_g + 1063 * fg_r - 5000);
+        let ck = -((361 * bg_b + 3576 * bg_g + 1063 * bg_r + 250) * cr
+                   - 361 * fg_b - 3576 * fg_g - 1063 * fg_r - 250)
+                 / (361 * fg_b + 3576 * fg_g + 1063 * fg_r - 5000);
         if (ck >= 0 && ck <= 1) {
+          ck *= 1 - compute_luminance(fg_r, fg_g, fg_b);
           const alpha = color.length > 3 ? color[3] : "1";
           fg_r = Math.round((fg_r + (1 - fg_r) * ck) * 255);
           fg_g = Math.round((fg_g + (1 - fg_g) * ck) * 255);
@@ -763,9 +779,12 @@ function qref(...args) {
       highlight.className = "qref_highlight";
       highlight.textContent = s.substring(i, j);
 
-      const color = adjust_color(node.parentNode);
-      if (color !== null) {
-        highlight.style.color = color;
+      const style = window.getComputedStyle(node.parentNode);
+      for (const property of ["color", "text-decoration-color", ]) {
+        const color = adjust_color(style.getPropertyValue(property));
+        if (color !== null) {
+          highlight.style.setProperty(property, color, "important");
+        }
       }
 
       new_nodes.push(highlight);
