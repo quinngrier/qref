@@ -39,6 +39,8 @@ function qref(...args) {
 
   const root_n = root.childNodes.length;
 
+  const z_index = 32767;
+
   const bg_r_xx = 255;
   const bg_g_xx = 255;
   const bg_b_xx = 153;
@@ -268,7 +270,7 @@ function qref(...args) {
 
       .qref_link {
         position: absolute;
-        z-index: 32767;
+        z-index: ${z_index};
       }
 
       .qref_links {
@@ -279,7 +281,7 @@ function qref(...args) {
       .qref_more_below {
         display: none;
         position: sticky;
-        z-index: 32767;
+        z-index: ${z_index};
       }
 
       .qref_link,
