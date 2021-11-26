@@ -67,13 +67,27 @@ function qref(...args) {
   //--------------------------------------------------------------------
   // get_rgba
   //--------------------------------------------------------------------
+  //
+  // The get_rgba function converts a CSS color property value into an
+  // array [R,G,B,A], where R, G, and B are integers in [0,255], and A
+  // is a real number in [0,1]. If the value could not be parsed, the
+  // return value is null.
+  //
 
   function get_rgba(color) {
     if (color.startsWith("rgb")) {
-      const i = color.indexOf("(");
-      const j = color.indexOf(")");
-      const xs = color.substring(i + 1, j).split(",");
-      return xs.map(x => parseFloat(x));
+      const i = color.indexOf("(", 3);
+      const j = color.lastIndexOf(")");
+      const rgba = color.substring(i + 1, j).split(",");
+      for (let k = 0; k < 3; ++k) {
+        rgba[k] = parseInt(rgba[k]);
+      }
+      if (rgba.length == 3) {
+        rgba.push(1);
+      } else {
+        rgba[3] = parseFloat(rgba[3]);
+      }
+      return rgba;
     }
     return null;
   }
