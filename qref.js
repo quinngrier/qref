@@ -33,18 +33,132 @@
 // TODO: Support prefixing, i.e., so "foo_qref" can be used instead of
 //       "qref" everywhere.
 
-// TODO: Instead of using color: #000 in .qref_highlight, adjust the
-//       color of every .qref_highlight node individually by adjusting
-//       the existing color, if necessary, to give a minimum contrast.
-//       Maybe convert RGB to HSL, adjust L up or down to satisfy the
-//       minimum contrast (whichever of up or down will be a smaller
-//       change), then convert back to RGB.
-
 function qref(...args) {
 
   const [root] = args;
 
   const root_n = root.childNodes.length;
+
+  const bg_r_xx = 255;
+  const bg_g_xx = 255;
+  const bg_b_xx = 153;
+
+  const bg_r = bg_r_xx / 255;
+  const bg_g = bg_g_xx / 255;
+  const bg_b = bg_b_xx / 255;
+  const bg_luminance = 0.2126 * bg_r + 0.7152 * bg_g + 0.0722 * bg_b;
+  const cr = 2.5;
+
+  //--------------------------------------------------------------------
+  // get_color
+  //--------------------------------------------------------------------
+
+  function get_color(element) {
+    const color = window.getComputedStyle(element).color;
+    if (color.startsWith("rgb")) {
+      const i = color.indexOf("(");
+      const j = color.indexOf(")");
+      const xs = color.substring(i + 1, j).split(",");
+      return xs.map(x => parseFloat(x));
+    }
+    return null;
+  }
+
+  //--------------------------------------------------------------------
+  // adjust_color
+  //--------------------------------------------------------------------
+  //
+  // We want to adjust the highlight text color, if necessary, to have
+  // good contrast against the highlight background color.
+  //
+  // First, we use the L = 0.2126 * R + 0.7152 * G + 0.0722 * B formula
+  // from <https://www.w3.org/TR/WCAG21/#dfn-relative-luminance> to
+  // compute a simplified relative luminance L, where R, G, and B are
+  // normalized to [0,1]. We remove the other parts of the formula, as
+  // they would make computation more difficult and would ultimately be
+  // overkill for our purposes.
+  //
+  // Next, we use the C = (L1 + 0.05) / (L2 + 0.05) formula from
+  // <https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio> to compute the
+  // contrast ratio C of two colors, where L1 is the larger of the two
+  // relative luminances. Note that C is always in [1,21].
+  //
+  // Next, if the highlight background color is light, i.e., if its
+  // relative luminance is in (0.5,1], then we compute a scalar ck with
+  // which to scale the text color toward black to satisfy the desired
+  // contrast ratio cr:
+  //
+  //       sage: bg_r, bg_g, bg_b = var('bg_r, bg_g, bg_b')
+  //       ....: fg_r, fg_g, fg_b = var('fg_r, fg_g, fg_b')
+  //       ....: ck, cr = var('ck, cr')
+  //       ....: solve([(  0.2126 * bg_r
+  //       ....:         + 0.7152 * bg_g
+  //       ....:         + 0.0722 * bg_b + 0.05) /
+  //       ....:        (  0.2126 * fg_r * ck
+  //       ....:         + 0.7152 * fg_g * ck
+  //       ....:         + 0.0722 * fg_b * ck + 0.05) == cr], ck)
+  //       [ck == (361*bg_b + 3576*bg_g
+  //               + 1063*bg_r - 250*cr + 250) /
+  //              (361*cr*fg_b + 3576*cr*fg_g + 1063*cr*fg_r)]
+  //
+  // If this produces a ck value in [0,1], then we use ck to scale the
+  // text color toward black. Otherwise, we leave the text color alone.
+  //
+  // On the other hand, if the highlight background color is dark, i.e.,
+  // if its relative luminance is in [0,0.5], then we compute a scalar
+  // ck with which to scale the text color toward white to satisfy the
+  // desired contrast ratio cr:
+  //
+  //       sage: bg_r, bg_g, bg_b = var('bg_r, bg_g, bg_b')
+  //       ....: fg_r, fg_g, fg_b = var('fg_r, fg_g, fg_b')
+  //       ....: ck, cr = var('ck, cr')
+  //       ....: solve([(  0.2126 * (fg_r + (1 - fg_r) * ck)
+  //       ....:         + 0.7152 * (fg_g + (1 - fg_g) * ck)
+  //       ....:         + 0.0722 * (fg_b + (1 - fg_b) * ck) + 0.05) /
+  //       ....:        (  0.2126 * bg_r
+  //       ....:         + 0.7152 * bg_g
+  //       ....:         + 0.0722 * bg_b + 0.05) == cr], ck)
+  //       [ck == -((361*bg_b + 3576*bg_g + 1063*bg_r + 250)*cr
+  //                - 361*fg_b - 3576*fg_g - 1063*fg_r - 250) /
+  //              (361*fg_b + 3576*fg_g + 1063*fg_r - 5000)]
+  //
+  // If this produces a ck value in [0,1], then we use ck to scale the
+  // text color toward white. Otherwise, we leave the text color alone.
+  //
+
+  function adjust_color(element) {
+    const color = get_color(element);
+    if (color !== null) {
+      let fg_r = color[0] / 255;
+      let fg_g = color[1] / 255;
+      let fg_b = color[2] / 255;
+      if (bg_luminance > 0.5) {
+        const ck =
+            (361 * bg_b + 3576 * bg_g + 1063 * bg_r - 250 * cr + 250)
+            / (361 * cr * fg_b + 3576 * cr * fg_g + 1063 * cr * fg_r);
+        if (ck >= 0 && ck <= 1) {
+          const alpha = color.length > 3 ? color[3] : "1";
+          fg_r = Math.round(fg_r * ck * 255);
+          fg_g = Math.round(fg_g * ck * 255);
+          fg_b = Math.round(fg_b * ck * 255);
+          return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
+        }
+      } else {
+        const ck =
+            -((361 * bg_b + 3576 * bg_g + 1063 * bg_r + 250) * cr
+              - 361 * fg_b - 3576 * fg_g - 1063 * fg_r - 250)
+            / (361 * fg_b + 3576 * fg_g + 1063 * fg_r - 5000);
+        if (ck >= 0 && ck <= 1) {
+          const alpha = color.length > 3 ? color[3] : "1";
+          fg_r = Math.round((fg_r + (1 - fg_r) * ck) * 255);
+          fg_g = Math.round((fg_g + (1 - fg_g) * ck) * 255);
+          fg_b = Math.round((fg_b + (1 - fg_b) * ck) * 255);
+          return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
+        }
+      }
+    }
+    return null;
+  }
 
   //--------------------------------------------------------------------
   // get_viewport
@@ -149,8 +263,7 @@ function qref(...args) {
     style.innerHTML = `
 
       .qref_highlight {
-        background: #FF9;
-        color: #000;
+        background: rgb(${bg_r_xx}, ${bg_g_xx}, ${bg_b_xx});
       }
 
       .qref_link {
@@ -181,7 +294,7 @@ function qref(...args) {
       .qref_link > a,
       .qref_more_above > a,
       .qref_more_below > a {
-        background: #FF9;
+        background: rgb(${bg_r_xx}, ${bg_g_xx}, ${bg_b_xx});
         border: 1px dotted #777;
         color: #777;
         display: block;
@@ -647,6 +760,12 @@ function qref(...args) {
       const highlight = document.createElement("span");
       highlight.className = "qref_highlight";
       highlight.textContent = s.substring(i, j);
+
+      const color = adjust_color(node.parentNode);
+      if (color !== null) {
+        highlight.style.color = color;
+      }
+
       new_nodes.push(highlight);
       k = j;
     }
