@@ -37,7 +37,7 @@ element as follows:
 You can also pin it to a specific version number:
 
 ```
-<script defer src="https://cdn.jsdelivr.net/npm/qref@0.0.3"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/qref@0.0.4"></script>
 ```
 
 You can also download and serve it locally:
