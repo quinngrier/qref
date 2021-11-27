@@ -52,16 +52,6 @@ function qref(...args) {
   const bg_g_xx = 255;
   const bg_b_xx = 153;
 
-  //--------------------------------------------------------------------
-  // compute_luminance
-  //--------------------------------------------------------------------
-
-  function compute_luminance(r, g, b) {
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  }
-
-  //--------------------------------------------------------------------
-
   const cr = 2.5;
 
   //--------------------------------------------------------------------
@@ -69,26 +59,30 @@ function qref(...args) {
   //--------------------------------------------------------------------
   //
   // The get_rgba function converts a CSS color property value into an
-  // array [R,G,B,A], where all four values are in [0,1]. If the value
-  // cannot be parsed, the function returns null.
+  // array [R,G,B,A], where all four values are in [0,1]. If the color
+  // property value cannot be parsed, the function returns null.
   //
 
-  function get_rgba(color) {
-    if (color.startsWith("rgb")) {
-      const i = color.indexOf("(", 3);
-      const j = color.lastIndexOf(")");
-      const rgba = color.substring(i + 1, j).split(",");
-      for (let k = 0; k < 3; ++k) {
-        rgba[k] = parseInt(rgba[k]) / 255;
-      }
-      if (rgba.length == 3) {
-        rgba.push(1);
-      } else {
-        rgba[3] = parseFloat(rgba[3]);
-      }
-      return rgba;
+  function get_rgba(text) {
+    if (text.startsWith("rgb")) {
+      const i = text.indexOf("(", 3);
+      const j = text.lastIndexOf(")");
+      const x = text.substring(i + 1, j).split(",");
+      const r = parseInt(x[0]) / 255;
+      const g = parseInt(x[1]) / 255;
+      const b = parseInt(x[2]) / 255;
+      const a = x.length == 3 ? 1 : parseFloat(x[3]);
+      return {r, g, b, a};
     }
     return null;
+  }
+
+  //--------------------------------------------------------------------
+  // get_luminance
+  //--------------------------------------------------------------------
+
+  function get_luminance(color) {
+    return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
   }
 
   //--------------------------------------------------------------------
@@ -160,36 +154,27 @@ function qref(...args) {
   //
 
   function ensure_contrast(fg, bg, cr) {
-    const bg_r = bg[0];
-    const bg_g = bg[1];
-    const bg_b = bg[2];
-    const bg_l = compute_luminance(bg_r, bg_g, bg_b);
-    let fg_r = fg[0];
-    let fg_g = fg[1];
-    let fg_b = fg[2];
-    if (bg_l > 0.5) {
+    if (get_luminance(bg) > 0.5) {
       let ck =
-          (361 * bg_b + 3576 * bg_g + 1063 * bg_r - 250 * cr + 250)
-          / (361 * cr * fg_b + 3576 * cr * fg_g + 1063 * cr * fg_r);
+          (361 * bg.b + 3576 * bg.g + 1063 * bg.r - 250 * cr + 250)
+          / (361 * cr * fg.b + 3576 * cr * fg.g + 1063 * cr * fg.r);
       if (ck >= 0 && ck <= 1) {
-        ck *= compute_luminance(fg_r, fg_g, fg_b);
-        const alpha = fg.length > 3 ? fg[3] : "1";
-        fg_r = Math.round(fg_r * ck * 255);
-        fg_g = Math.round(fg_g * ck * 255);
-        fg_b = Math.round(fg_b * ck * 255);
-        return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
+        ck *= get_luminance(fg);
+        fg.r = Math.round(fg.r * ck * 255);
+        fg.g = Math.round(fg.g * ck * 255);
+        fg.b = Math.round(fg.b * ck * 255);
+        return `rgba(${fg.r}, ${fg.g}, ${fg.b}, ${fg.a})`;
       }
     } else {
-      let ck = -((361 * bg_b + 3576 * bg_g + 1063 * bg_r + 250) * cr
-                 - 361 * fg_b - 3576 * fg_g - 1063 * fg_r - 250)
-               / (361 * fg_b + 3576 * fg_g + 1063 * fg_r - 5000);
+      let ck = -((361 * bg.b + 3576 * bg.g + 1063 * bg.r + 250) * cr
+                 - 361 * fg.b - 3576 * fg.g - 1063 * fg.r - 250)
+               / (361 * fg.b + 3576 * fg.g + 1063 * fg.r - 5000);
       if (ck >= 0 && ck <= 1) {
-        ck *= 1 - compute_luminance(fg_r, fg_g, fg_b);
-        const alpha = fg.length > 3 ? fg[3] : "1";
-        fg_r = Math.round((fg_r + (1 - fg_r) * ck) * 255);
-        fg_g = Math.round((fg_g + (1 - fg_g) * ck) * 255);
-        fg_b = Math.round((fg_b + (1 - fg_b) * ck) * 255);
-        return `rgba(${fg_r}, ${fg_g}, ${fg_b}, ${alpha})`;
+        ck *= 1 - get_luminance(fg);
+        fg.r = Math.round((fg.r + (1 - fg.r) * ck) * 255);
+        fg.g = Math.round((fg.g + (1 - fg.g) * ck) * 255);
+        fg.b = Math.round((fg.b + (1 - fg.b) * ck) * 255);
+        return `rgba(${fg.r}, ${fg.g}, ${fg.b}, ${fg.a})`;
       }
     }
     return null;
