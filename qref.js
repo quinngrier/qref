@@ -69,9 +69,8 @@ function qref(...args) {
   //--------------------------------------------------------------------
   //
   // The get_rgba function converts a CSS color property value into an
-  // array [R,G,B,A], where R, G, and B are integers in [0,255], and A
-  // is a real number in [0,1]. If the value could not be parsed, the
-  // return value is null.
+  // array [R,G,B,A], where all four values are in [0,1]. If the value
+  // cannot be parsed, the function returns null.
   //
 
   function get_rgba(color) {
@@ -80,7 +79,7 @@ function qref(...args) {
       const j = color.lastIndexOf(")");
       const rgba = color.substring(i + 1, j).split(",");
       for (let k = 0; k < 3; ++k) {
-        rgba[k] = parseInt(rgba[k]);
+        rgba[k] = parseInt(rgba[k]) / 255;
       }
       if (rgba.length == 3) {
         rgba.push(1);
@@ -161,13 +160,13 @@ function qref(...args) {
   //
 
   function ensure_contrast(fg, bg, cr) {
-    const bg_r = bg[0] / 255;
-    const bg_g = bg[1] / 255;
-    const bg_b = bg[2] / 255;
+    const bg_r = bg[0];
+    const bg_g = bg[1];
+    const bg_b = bg[2];
     const bg_l = compute_luminance(bg_r, bg_g, bg_b);
-    let fg_r = fg[0] / 255;
-    let fg_g = fg[1] / 255;
-    let fg_b = fg[2] / 255;
+    let fg_r = fg[0];
+    let fg_g = fg[1];
+    let fg_b = fg[2];
     if (bg_l > 0.5) {
       let ck =
           (361 * bg_b + 3576 * bg_g + 1063 * bg_r - 250 * cr + 250)
