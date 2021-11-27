@@ -36,6 +36,9 @@
 // TODO: Compute a highlight background color to use based on the root
 //       element's text color instead of hardcoding #FF9?
 
+// TODO: qref(...) should be qref(config), where config is an optional
+//       object used to specify the configuration.
+
 function qref(...args) {
 
   const [root] = args;
