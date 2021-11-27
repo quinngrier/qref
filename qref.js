@@ -80,9 +80,18 @@ function qref(...args) {
   //--------------------------------------------------------------------
   // get_luminance
   //--------------------------------------------------------------------
+  //
+  // The get_luminance function returns the simplified luminance of a
+  // get_rgba color c. The simplified luminance of c is defined to be
+  // 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b, which is derived from
+  // <https://www.w3.org/TR/WCAG21/#dfn-relative-luminance>. We remove
+  // the other parts of the original formula, as they would make the
+  // computation more complex and would be overkill for our purposes.
+  // Note that the luminance always lies in [0,1].
+  //
 
-  function get_luminance(color) {
-    return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+  function get_luminance(c) {
+    return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
   }
 
   //--------------------------------------------------------------------
@@ -91,13 +100,6 @@ function qref(...args) {
   //
   // We want to adjust the highlight text color, if necessary, to have
   // good contrast against the highlight background color.
-  //
-  // First, we use the L = 0.2126 * R + 0.7152 * G + 0.0722 * B formula
-  // from <https://www.w3.org/TR/WCAG21/#dfn-relative-luminance> to
-  // compute a simplified relative luminance L, where R, G, and B are
-  // normalized to [0,1]. We remove the other parts of the formula, as
-  // they would make computation more difficult and would ultimately be
-  // overkill for our purposes.
   //
   // Next, we use the C = (L1 + 0.05) / (L2 + 0.05) formula from
   // <https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio> to compute the
