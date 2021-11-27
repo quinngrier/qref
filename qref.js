@@ -33,10 +33,6 @@
 // TODO: Support prefixing, i.e., so "foo_qref" can be used instead of
 //       "qref" everywhere.
 
-// TODO: Change the color adjustment to compute the scalar that would be
-//       used for white (or black, for a dark background) and apply it
-//       uniformly to all colors.
-
 // TODO: Compute a highlight background color to use based on the root
 //       element's text color instead of hardcoding #FF9?
 
